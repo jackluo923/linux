@@ -12,6 +12,7 @@ env:
   matrix:
   - DEFCONFIG_NAME=zynq_xcomm_adv7511_defconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
   - DEFCONFIG_NAME=zynq_pluto_defconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
+  - DEFCONFIG_NAME=zynq_sidekiqz2_defconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabihf-
 
 before_install:
   - sudo apt-get update -qq
