@@ -1,4 +1,8 @@
-        Linux kernel release 4.x <http://kernel.org/>
+Note: This is a customized kernel release version 4.0.0-gebdefc4 suitable for
+Zedboard Mini-ITX with z7100 processor with design files generated 
+by Vivado and SDK v2014. Switch to noFS-4.0.0 branch for all related work for NoFs.
+
+Linux kernel release 4.x <http://kernel.org/>
 
 These are the release notes for Linux version 4.  Read them carefully,
 as they tell you what this is all about, explain how to install the
