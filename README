@@ -2,6 +2,15 @@ Note: This is a customized kernel release version 4.0.0-gebdefc4 suitable
 for Zedboard Mini-ITX with z7100 processor with design files generated
 by Vivado and SDK v2014 
 
+Build instructions:
+$ make ARCH=arm distclean
+$ make ARCH=arm zynq_xcomm_adv7511_defconfig
+$ make ARCH=arm uImage LOADADDR=0x8000
+
+The resulting uImage kernel should be under arch/arm/boot/uImage. 
+$ uname -rv should be the following: 
+4.0.0-gebdefc4 #1 SMP PREEMPT <current date>
+
         Linux kernel release 3.x <http://kernel.org/>
 
 These are the release notes for Linux version 3.  Read them carefully,
