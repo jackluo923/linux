@@ -80,7 +80,7 @@ SYSCALL_DEFINE3(pattach, const __user char *, guid, size_t, len, unsigned long, 
     
     /* Load vma into the kernel: get pbrk, then call do_pbrk() */
     // PTE: 9, POFFSET: 12, PMD: 9, HPAGE_PMD_SIZE == 1 << HPAGE_PMD_SHIFT == 1 << 21
-    region_len = pdb.stores[check].cnt * HPAGE_PMD_SIZE;
+    region_len = pdb.stores[check].cnt * PAGE_SIZE;
     printk("Now attaching an existing ID %s with check value %d, size: %lx", pmmid, check, region_len);
     
     if(down_write_killable(&current->mm->mmap_sem)) {

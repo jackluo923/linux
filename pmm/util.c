@@ -86,14 +86,14 @@ unsigned long pmm_get_ptn_addr(struct vm_area_struct *vma,
 
 // Read one byte from kernel page
 int pmm_kernel_read_page_byte(char* msg) {
-  if(pdf.store_cnt > 0 && pdb.stores[0].cnt > 0) {
+  if(pdb.store_cnt > 0 && pdb.stores[0].cnt > 0) {
     unsigned long pfn = pdb.stores[0].paddr[0];
     unsigned long paddr = pfn * PAGE_SIZE;
     unsigned long kvaddr = (unsigned long) phys_to_virt((phys_addr_t)paddr);
     char c1 = *((char*)kvaddr);
     char c2 = *(((char*)kvaddr) + 1);
     printk("%s : reading from pfn: %lx, paddr: %p, kvaddr: %p, ch1: %c, ch2: %c",
-	   msg, pfn, paddr, kvaddr, c1, c2);
+	   msg, pfn, (void*)paddr, (void*)kvaddr, c1, c2);
   }
   return 0;
 }

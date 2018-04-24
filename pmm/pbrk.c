@@ -5,17 +5,17 @@
  *
  * Persistent memory region accounting code	<i@xuzhao.net>
  */
-#include <linux/syscalls.h>
 #include <linux/mm.h>
 #include <linux/mman.h>
 #include <linux/rmap.h>
 #include <linux/security.h>
+#include <uapi/linux/personality.h>
+#include <linux/syscalls.h>
 #include "pmm.h"
 
 static inline int mlock_future_check(struct mm_struct *mm, unsigned long flags, unsigned long len);
 static int find_vma_links(struct mm_struct *mm, unsigned long addr, unsigned long end, struct vm_area_struct **pprev, struct rb_node ***rb_link, struct rb_node **rb_parent);
 static void vma_link(struct mm_struct *mm, struct vm_area_struct *vma, struct vm_area_struct *prev, struct rb_node **rb_link, struct rb_node *rb_parent);
-static void insert_magic_word(unsigned long page_kernel_vaddr, int num);
 static void insert_pstore(struct mm_struct *mm, unsigned long paddr, unsigned long vaddr);
 static int foreign_mm_populate(struct task_struct *tsk,
 				struct mm_struct *mm, unsigned long start, unsigned long len);
@@ -32,7 +32,6 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
   unsigned long min_pbrk;
   bool populate;
   struct mm_struct *mm = current->mm;
-  struct vm_area_struct *next;
   struct vm_area_struct *target_vma = NULL;
   LIST_HEAD(uf);
   pid_t owner_pid;
@@ -84,14 +83,11 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
     goto out;
   }
   
-  /* Now deal with increasing pbrk. */
   /* Check against existing mmap mappings. */
-  next = find_vma(mm, oldpbrk);
   /* If newpbrk + PAGE_SIZE is larger than the safe bound of next vma region, stop increasing pbrk*/
-  if(next && newpbrk + PAGE_SIZE > vm_start_gap(next)) {
+  if(find_vma_intersection(mm, oldpbrk, newpbrk+PAGE_SIZE)) {
     goto out;
   }
-  // printk("Ok, looks good - let it rip. pbrk=%p.\n", (void*)pbrk);
   /* Ok, looks good - let it rip. */
   
   if(do_pbrk(current->mm, oldpbrk, newpbrk - oldpbrk, &uf, &target_vma) < 0) {
@@ -225,7 +221,7 @@ int do_pbrk(struct mm_struct *mm, unsigned long addr, unsigned long request, str
      * Clear old maps. This also does some error checking for us.
      */
     while(find_vma_links(mm, addr, addr+len, &prev, &rb_link, &rb_parent)) {
-        if(do_munmap(mm, addr, len, uf)) {
+        if(do_munmap(mm, addr, len)) {
             return -ENOMEM;
         }
     }
@@ -282,21 +278,34 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 		unsigned long len, unsigned long pgoff, unsigned long flags)
 {
 	struct mm_struct *mm = current->mm;
-	struct vm_area_struct *vma, *prev;
+	struct vm_area_struct *vma;
+	int do_align = 0;
+	int aliasing = cache_is_vipt_aliasing();
 	struct vm_unmapped_area_info info;
 
-	if (len > TASK_SIZE - mmap_min_addr)
-		return -ENOMEM;
+	if(aliasing) {
+		do_align = filp || (flags & MAP_SHARED);
+	}
 
-	if (flags & MAP_FIXED)
+	if (flags & MAP_FIXED) {
+		if (aliasing && flags & MAP_SHARED &&
+	    		(addr - (pgoff << PAGE_SHIFT)) & (SHMLBA - 1))
+				return -EINVAL;
 		return addr;
+	}
+	if(len > TASK_SIZE) {
+		return -ENOMEM;
+	}
 
 	if (addr) {
-		addr = PAGE_ALIGN(addr);
-		vma = find_vma_prev(mm, addr, &prev);
-		if (TASK_SIZE - len >= addr && addr >= mmap_min_addr &&
-		    (!vma || addr + len <= vm_start_gap(vma)) &&
-		    (!prev || addr >= vm_end_gap(prev)))
+		if (do_align)
+			addr = COLOUR_ALIGN(addr, pgoff);
+		else
+			addr = PAGE_ALIGN(addr);
+
+		vma = find_vma(mm, addr);
+		if (TASK_SIZE - len >= addr &&
+		    (!vma || addr + len <= vma->vm_start))
 			return addr;
 	}
 
@@ -304,7 +313,8 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	info.length = len;
 	info.low_limit = mm->mmap_base;
 	info.high_limit = TASK_SIZE;
-	info.align_mask = 0;
+	info.align_mask = do_align ? (PAGE_MASK&(SHMLBA-1)) : 0;
+	info.align_offset = pgoff << PAGE_SHIFT;
 	return vm_unmapped_area(&info);
 }
 #endif
@@ -363,7 +373,7 @@ static int find_vma_links(struct mm_struct *mm, unsigned long addr,
 
 static long vma_compute_subtree_gap(struct vm_area_struct *vma)
 {
-	unsigned long max, prev_end, subtree_gap;
+	unsigned long max, subtree_gap;
 
 	/*
 	 * Note: in the rare case of a VM_GROWSDOWN above a VM_GROWSUP, we
@@ -371,13 +381,9 @@ static long vma_compute_subtree_gap(struct vm_area_struct *vma)
 	 * an unmapped area; whereas when expanding we only require one.
 	 * That's a little inconsistent, but keeps the code here simpler.
 	 */
-	max = vm_start_gap(vma);
+	max = vma->vm_start;
 	if (vma->vm_prev) {
-		prev_end = vm_end_gap(vma->vm_prev);
-		if (max > prev_end)
-			max -= prev_end;
-		else
-			max = 0;
+		max -= vma->vm_prev->vm_end;
 	}
 	if (vma->vm_rb.rb_left) {
 		subtree_gap = rb_entry(vma->vm_rb.rb_left,
@@ -461,7 +467,7 @@ static void validate_mm(struct mm_struct *mm)
 			anon_vma_unlock_read(anon_vma);*/
 		}
 
-		highest_address = vm_end_gap(vma);
+		highest_address = vma->vm_end;
 		vma = vma->vm_next;
 		i++;
 	}
@@ -592,7 +598,7 @@ long foreign_populate_vma_page_range(struct task_struct *tsk,
 	 * not result in a stack expansion that recurses back here.
 	 */
 	return get_user_pages_remote(tsk, mm, start, nr_pages, gup_flags,
-				NULL, NULL, nonblocking);
+				NULL, NULL);
 }
 
 
