@@ -38,7 +38,7 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
   pid_t owner_pid;
   // for notifying other processes
   struct list_head *node = NULL;
-  struct pmm_owenr *current_owner = NULL;
+  struct pmm_owner *current_owner = NULL;
   struct pmm_owner *pid_owner = NULL;
   
   // printk("Now in system call pbrk! caller:%d, pbrk=%p, pstore id: %s.\n", current->pid, (void*)pbrk, mm->pstore->pmmid);
@@ -130,7 +130,6 @@ set_pbrk:
             unsigned int page_increm = 1;
             unsigned int page_mask = 0;
             unsigned long page_frame_addr = pmm_get_ptn_addr(target_vma, start, foll_flags, &page_mask);
-            unsigned long kvirt = (unsigned long)phys_to_virt((phys_addr_t) page_frame_addr);
             // printk("Now we get the physical address: %p for vaddr %p, kvaddr: %p, nrpages=%ld", (void*)page_frame_addr, (void*) start, (void*)kvirt, nr_pages);
             insert_pstore(mm, page_frame_addr, start);
             if(page_increm > nr_pages) {
@@ -187,7 +186,7 @@ static void insert_pstore(struct mm_struct* mm, unsigned long paddr, unsigned lo
     return;
   }
   index = mm->pstore->cnt;
-  mm->pstore->.paddr[index] = paddr;
+  mm->pstore->paddr[index] = paddr;
   mm->pstore->cnt += 1;
   return;
 }

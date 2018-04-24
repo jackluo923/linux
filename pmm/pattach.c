@@ -48,7 +48,6 @@ SYSCALL_DEFINE3(pattach, const __user char *, guid, size_t, len, unsigned long, 
     cur_store = &pdb.stores[pdb.store_cnt];
     /* Set initial pbrk and page count to zero */
     cur_store->cnt = 0;
-    cur_store->pbrk_start = MIN_PBRK;
     // copy pmmid to cur_store.pmmid
     for(i = 0; i < len; i ++) {
       cur_store->pmmid[i] = pmmid[i];
@@ -107,9 +106,8 @@ SYSCALL_DEFINE0(pdetach) {
   /* Unload vma from the kernel, resembles punmap code */
   unsigned long start = MIN_PBRK;
   unsigned long cur_pbrk = 0;
-  struct pmm_owner *powner = NULL;
   unsigned long len = 0;
-  struct pmm_owner *powner = pmm_get_owner_from_pid(current->pid);
+  struct pmm_owner *powner = pmm_get_owner_from_pid(current->mm->pstore, current->pid);
 
   if(current->mm->pstore == NULL) {
     printk("Error: you are calling detach without attaching a pstore.");
