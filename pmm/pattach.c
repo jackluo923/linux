@@ -12,17 +12,20 @@
  */
 SYSCALL_DEFINE3(pattach, const __user char *, guid, size_t, len, unsigned long, flag) {
   // Step 1: copy id in
+printk("You are now trying to attach to a pheap.");
   unsigned long ret = 0;
   char pmmid[PMMID_LEN_LIMIT] = {0};
   int i = 0;
   int check = -2;
   
   if(len > PMMID_LEN_LIMIT-1) {
+    printk("Len exceeds limit: %u", len);
     return -EINVAL;
   }
   ret = copy_from_user(pmmid, guid, len);
   pmmid[len] = '\0'; // add trailing '\0'
   if(ret) {
+    printk("Copy failed ! not enough memory?");
     return -EFAULT;
   }
   check = pmm_check_id_conflict(pmmid);

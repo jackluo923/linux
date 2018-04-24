@@ -4,9 +4,9 @@
 #include <linux/list.h>
 // #define MIN_PBRK 0x2a0002000000UL
 #define MIN_PBRK 0x80000000UL
-#define MAX_PMM_SIZE 2048 // 2048 pages, 2048 x 4k = 8M
+#define MAX_PMM_SIZE 20 // 20 pages, for now we have 16 x 4k = 64k
 #define PMM_COUNT_LIMIT 16
-#define PMMID_LEN_LIMIT 256
+#define PMMID_LEN_LIMIT 20
 
 // helper functions
 struct pmm_owner* pmm_get_owner_from_pid(struct pmm_store* pstore, pid_t pid);
