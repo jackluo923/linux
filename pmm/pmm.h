@@ -1,8 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0 */
+#pragma once
 #include <linux/types.h>
 #include <linux/list.h>
-#define MIN_PBRK 0x2a0002000000UL
-#define MAX_PMM_SIZE 2048
+// #define MIN_PBRK 0x2a0002000000UL
+#define MIN_PBRK 0x80000000UL
+#define MAX_PMM_SIZE 2048 // 2048 pages, 2048 x 4k = 8M
 #define PMM_COUNT_LIMIT 16
 #define PMMID_LEN_LIMIT 256
 
