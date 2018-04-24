@@ -436,6 +436,8 @@ struct mm_struct {
 	unsigned long def_flags;
 	unsigned long start_code, end_code, start_data, end_data;
 	unsigned long start_brk, brk, start_stack;
+    
+    
 	unsigned long arg_start, arg_end, env_start, env_end;
 
 	unsigned long saved_auxv[AT_VECTOR_SIZE]; /* for /proc/PID/auxv */
@@ -447,7 +449,9 @@ struct mm_struct {
 	struct mm_rss_stat rss_stat;
 
 	struct linux_binfmt *binfmt;
-
+	// added by Xu ! pstore pointer
+        struct pmm_store* pstore;
+  
 	cpumask_var_t cpu_vm_mask_var;
 
 	/* Architecture-specific MM context */

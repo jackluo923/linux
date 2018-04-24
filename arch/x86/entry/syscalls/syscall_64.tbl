@@ -338,6 +338,11 @@
 329	common	pkey_mprotect		sys_pkey_mprotect
 330	common	pkey_alloc		sys_pkey_alloc
 331	common	pkey_free		sys_pkey_free
+# Added by Xu
+332     common  pbrk                    sys_pbrk
+333     common  pattach                 sys_pattach
+334     common  pdetach                 sys_pdetach
+335     common  pchmod                  sys_pchmod
 
 #
 # x32-specific system call numbers start at 512 to avoid cache impact

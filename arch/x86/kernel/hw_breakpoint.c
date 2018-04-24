@@ -408,7 +408,7 @@ void flush_ptrace_hw_breakpoint(struct task_struct *tsk)
 	int i;
 	struct thread_struct *t = &tsk->thread;
 
-	for (i = 0; i < HBP_NUM; i++) {
+	for (i = 0; i < HBP_NUM; i++) {  // HBP_NUM
 		unregister_hw_breakpoint(t->ptrace_bps[i]);
 		t->ptrace_bps[i] = NULL;
 	}

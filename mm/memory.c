@@ -1168,8 +1168,9 @@ again:
 			}
 			rss[mm_counter(page)]--;
 			page_remove_rmap(page, false);
-			if (unlikely(page_mapcount(page) < 0))
-				print_bad_pte(vma, addr, ptent, page);
+			if (unlikely(page_mapcount(page) < 0)) {
+			  print_bad_pte(vma, addr, ptent, page);
+			}
 			if (unlikely(__tlb_remove_page(tlb, page))) {
 				force_flush = 1;
 				pending_page = page;

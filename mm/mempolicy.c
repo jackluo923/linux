@@ -1972,6 +1972,7 @@ static struct page *alloc_page_interleave(gfp_t gfp, unsigned order,
  *	all allocations for pages that will be mapped into user space. Returns
  *	NULL when no page can be allocated.
  */
+
 struct page *
 alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 		unsigned long addr, int node, bool hugepage)
@@ -1981,6 +1982,21 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	unsigned int cpuset_mems_cookie;
 	struct zonelist *zl;
 	nodemask_t *nmask;
+
+  // Added by Xu!!! early return of the page
+ 
+  if(current != NULL && current->mm != NULL && current->mm->pstore != NULL) {
+    unsigned long pheaplo = MIN_PBRK;
+    unsigned long pheaphi = pheaplo + current->mm->pstore->cnt * PAGE_SIZE;
+    if(addr < pheaphi && addr >= pheaplo) {
+      int index = (addr - pheaplo) / PAGE_SIZE;
+      if(index >=0 && index < current->mm->pstore->cnt) {
+	unsigned long pfn = current->mm->pstore->paddr[index];
+	page = pfn_to_page(pfn);
+	return page;
+      }
+    }
+  }
 
 retry_cpuset:
 	pol = get_vma_policy(vma, addr);

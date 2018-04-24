@@ -731,6 +731,20 @@ void __noreturn do_exit(long code)
 	int group_dead;
 	TASKS_RCU(int tasks_rcu_i);
 
+	// Added by Xu!! delete pid from pmm_owner
+	if(current != NULL && current->mm != NULL && current->mm->pstore != NULL) {
+	  int attached_process = 0;
+	  pmm_delete_pid_from_list(current->mm->pstore, current->pid);
+	  if(current->mm->pstore->owner_list != NULL) {
+	    struct list_head *node = NULL;
+	    list_for_each(node, &current->mm->pstore->owner_list->olist) {
+	      attached_process += 1;
+	    }
+	  }
+	  // printk("Removing a process from pstore %s attach list, now attacher count: %d",
+	  //	 current->mm->pstore->pmmid, attached_process);
+	}
+
 	profile_task_exit(tsk);
 	kcov_task_exit(tsk);
 

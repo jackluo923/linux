@@ -869,6 +869,7 @@ static inline void __mmput(struct mm_struct *mm)
 		module_put(mm->binfmt->module);
 	set_bit(MMF_OOM_SKIP, &mm->flags);
 	mmdrop(mm);
+	// pmm_kernel_read_page_byte("After calling __mmput");
 }
 
 /*

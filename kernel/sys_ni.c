@@ -255,3 +255,9 @@ cond_syscall(sys_membarrier);
 cond_syscall(sys_pkey_mprotect);
 cond_syscall(sys_pkey_alloc);
 cond_syscall(sys_pkey_free);
+
+/* Added by Xu */
+cond_syscall(sys_pbrk);
+cond_syscall(sys_pattach);
+cond_syscall(sys_pdetach);
+cond_syscall(sys_pchmod);

@@ -205,6 +205,13 @@ extern struct trace_event_functions exit_syscall_print_funcs;
 	}								\
 	static inline long SYSC##name(__MAP(x,__SC_DECL,__VA_ARGS__))
 
+/* Begin: added by Xu */
+asmlinkage long sys_pbrk(unsigned long pbrk);
+asmlinkage long sys_pattach(const __user char *guid, size_t len, unsigned long flag);
+asmlinkage long sys_pdetach(void);
+asmlinkage long sys_pchmod(unsigned long mode);
+/* Finish: added by Xu */
+
 asmlinkage long sys32_quotactl(unsigned int cmd, const char __user *special,
 			       qid_t id, void __user *addr);
 asmlinkage long sys_time(time_t __user *tloc);

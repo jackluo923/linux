@@ -1234,12 +1234,25 @@ void __meminit reserve_bootmem_region(phys_addr_t start, phys_addr_t end)
 	}
 }
 
+
 static void __free_pages_ok(struct page *page, unsigned int order)
-{
+{ 
 	unsigned long flags;
 	int migratetype;
 	unsigned long pfn = page_to_pfn(page);
 
+	// Added by Xu!!
+	// Step: first check if page is from pmm, ifso, fast return
+	unsigned long pdbindex;
+	unsigned long index;
+	for(pdbindex = 0; pdbindex < pdb.store_cnt; pdbindex ++){
+	for(index = 0; index < pdb.stores[pdbindex].cnt; index ++) {
+	  unsigned long paddr = pdb.stores[pdbindex].paddr[index];
+	  if(pfn == paddr) {
+	    return;
+	  }
+	}}
+    
 	if (!free_pages_prepare(page, order, true))
 		return;
 
@@ -2413,6 +2426,19 @@ void free_hot_cold_page(struct page *page, bool cold)
 	unsigned long flags;
 	unsigned long pfn = page_to_pfn(page);
 	int migratetype;
+
+	// Added by Xu!!
+	// Step: first check if page is from pmm, ifso, fast return
+	unsigned long pdbindex;
+	unsigned long index;
+	for(pdbindex = 0; pdbindex < pdb.store_cnt; pdbindex ++){
+	for(index = 0; index < pdb.stores[pdbindex].cnt; index ++) {
+	  unsigned long paddr = pdb.stores[pdbindex].paddr[index];
+	  if(pfn == paddr) {
+	    return;
+	  }
+	}}
+
 
 	if (!free_pcp_prepare(page))
 		return;

@@ -2770,6 +2770,11 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	finish_arch_post_lock_switch();
 
 	fire_sched_in_preempt_notifiers(current);
+	// if(*prev->comm == 'a' && *(prev->comm+1) =='.' && *(prev->comm+2) =='o') {
+	//	printk("Switching away from %s!!", prev->comm);
+	//	pmm_kernel_read_page_byte("Before task_finish_switch!");
+	// }
+	// pmm_kernel_read_page_byte();
 	if (mm)
 		mmdrop(mm);
 	if (unlikely(prev_state == TASK_DEAD)) {
@@ -2789,6 +2794,13 @@ static struct rq *finish_task_switch(struct task_struct *prev)
 	}
 
 	tick_nohz_task_switch();
+	// printk("After calling tick_nohz_ in finish_task_switch");
+	// pmm_kernel_read_page_byte();
+	// if((*prev->comm) == 'a' && (*(prev->comm+1)) =='.' && (*(prev->comm+2)) =='o') {
+	//	printk("Switching away from %s!!", prev->comm);
+	//	pmm_kernel_read_page_byte("After task_finish_switch!");
+	// }
+
 	return rq;
 }
 
