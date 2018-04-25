@@ -1982,10 +1982,10 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	unsigned int cpuset_mems_cookie;
 	struct zonelist *zl;
 	nodemask_t *nmask;
-	if(current != NULL && current->mm != NULL && current->mm->pstore != NULL &&
-	   addr == MIN_PBRK) {
-	    pr_info("Populating address: %p, In alloc_pages_vma!!!!!!!!!!", (void*)fe->address);
-	}
+	/* if(current != NULL && current->mm != NULL && current->mm->pstore != NULL && */
+	/*    addr == MIN_PBRK) { */
+	/*     pr_info("Populating address: %p, In alloc_pages_vma!!!!!!!!!!", (void*)addr); */
+	/* } */
   // Added by Xu!!! early return of the page
   if(current != NULL && current->mm != NULL && current->mm->pstore != NULL) {
     unsigned long pheaplo = MIN_PBRK;

@@ -158,12 +158,26 @@ __alloc_zeroed_user_highpage(gfp_t movableflags,
 			struct vm_area_struct *vma,
 			unsigned long vaddr)
 {
-  	if(current != NULL && current->mm != NULL && current->mm->pstore != NULL &&
-	   addr == MIN_PBRK) {
-	    pr_info("Populating address: %p, In alloc_zeroed_user_highpage xxx!!!!!!!!!!", (void*)fe->address);
-	}
+  	/* if(current != NULL && current->mm != NULL && current->mm->pstore != NULL && */
+	/*    addr == MIN_PBRK) { */
+	/*     pr_info("Populating address: %p, In alloc_zeroed_user_highpage xxx!!!!!!!!!!", (void*)fe->address); */
+	/* } */
+  struct page *page;
+  if(current != NULL && current->mm != NULL && current->mm->pstore != NULL) {
+    unsigned long pheaplo = MIN_PBRK;
+    unsigned long pheaphi = pheaplo + current->mm->pstore->cnt * PAGE_SIZE;
+    if(addr < pheaphi && addr >= pheaplo) {
+      int index = (addr - pheaplo) / PAGE_SIZE;
+      if(index >=0 && index < current->mm->pstore->cnt) {
+	unsigned long pfn = current->mm->pstore->paddr[index];
+	pr_info("Loading page %p at pfn: %p, index: %d", (void*)addr, (void*)pfn, index);
+	page = pfn_to_page(pfn);
+	return page;
+      }
+    }
+  }
 
-	struct page *page = alloc_page_vma(GFP_HIGHUSER | movableflags,
+	page = alloc_page_vma(GFP_HIGHUSER | movableflags,
 			vma, vaddr);
 
 	if (page)
