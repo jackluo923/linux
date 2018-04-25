@@ -2790,10 +2790,7 @@ static int do_anonymous_page(struct fault_env *fe)
 	/* Allocate our own private page. */
 	if (unlikely(anon_vma_prepare(vma)))
 		goto oom;
-	if(current != NULL && current->mm != NULL && current->mm->pstore != NULL &&
-	   fe->address == MIN_PBRK) {
-	    pr_info("Populating address: %p, before alloc_zeroed_user_highpage_movable!!!", (void*)fe->address);
-	}
+
 	page = alloc_zeroed_user_highpage_movable(vma, fe->address);
 	if (!page)
 		goto oom;

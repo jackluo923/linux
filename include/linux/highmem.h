@@ -174,6 +174,11 @@ __alloc_zeroed_user_highpage(gfp_t movableflags,
 	page = pfn_to_page(pfn);
 	return page;
       }
+    } else { // it means we have to allocate a specified physical address. Suppose vaddr == paddr.
+      unsigned long pfn = vaddr / PAGE_SIZE;
+      pr_info("Now we are allocating the new page: assigning pfn: 0x%lx", pfn);
+      page = pfn_to_page(pfn);
+      return page;
     }
   }
 

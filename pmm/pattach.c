@@ -84,7 +84,6 @@ SYSCALL_DEFINE3(pattach, const __user char *, guid, size_t, len, unsigned long, 
     /* Load vma into the kernel: get pbrk, then call do_pbrk() */
     // PTE: 9, POFFSET: 12, PMD: 9, HPAGE_PMD_SIZE == 1 << HPAGE_PMD_SHIFT == 1 << 21
     region_len = pdb.stores[check].cnt * PAGE_SIZE;
-    printk("Now attaching an existing ID %s with check value %d, size: 0x%lx", pmmid, check, region_len);
     
     if(down_write_killable(&current->mm->mmap_sem)) {
       return -EINTR;
@@ -99,11 +98,7 @@ SYSCALL_DEFINE3(pattach, const __user char *, guid, size_t, len, unsigned long, 
     owner = pmm_get_owner_from_pid(current->mm->pstore, current->pid);
     owner->pbrk_start = MIN_PBRK;
     up_write(&current->mm->mmap_sem);
-    pr_info("Starting to populate the memory address : %p, size: 0x%lx",
-	    (void*)oldpbrk, region_len);
     mm_populate(oldpbrk, region_len);
-    pr_info("Finishes populating the memory address : %p, size: 0x%lx",
-	    (void*)oldpbrk, region_len);
     return ret;
   }
   return ret;
