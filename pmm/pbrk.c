@@ -40,7 +40,7 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
   struct pmm_owner *current_owner = NULL;
   struct pmm_owner *pid_owner = NULL;
   
-  // printk("Now in system call pbrk! caller:%d, pbrk=%p, pstore id: %s.\n", current->pid, (void*)pbrk, mm->pstore->pmmid);
+  pr_info("Now in system call pbrk! caller:%d, pbrk=%p, pstore id: %s.\n", current->pid, (void*)pbrk, mm->pstore->pmmid);
   
   if(mm->pstore == NULL) {
     // printk("There is no pstore attached! Now returning from pbrk.");
@@ -89,7 +89,7 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
     goto out;
   }
   /* Ok, looks good - let it rip. */
-  pr_info("Looks good, calling do_pbrk: %p, %u", (void*)oldpbrk, (newpbrk - oldpbrk));
+  pr_info("Looks good, calling do_pbrk: %p, %lu", (void*)oldpbrk, (newpbrk - oldpbrk));
   if(do_pbrk(current->mm, oldpbrk, newpbrk - oldpbrk, &uf, &target_vma) < 0) {
     goto out; /* do_pbrk fails */
   }
@@ -126,7 +126,7 @@ set_pbrk:
             unsigned int page_increm = 1;
             unsigned int page_mask = 0;
             unsigned long page_frame_addr = pmm_get_ptn_addr(target_vma, start, foll_flags, &page_mask);
-            pr_info("Now we get the physical address: %p for vaddr %p, kvaddr: %p, nrpages=%ld", (void*)page_frame_addr, (void*) start, (void*)kvirt, nr_pages);
+            pr_info("Now we get the physical address: %p for vaddr %p, nrpages=%ld", (void*)page_frame_addr, (void*) start, nr_pages);
             insert_pstore(mm, page_frame_addr, start);
             if(page_increm > nr_pages) {
                 page_increm = nr_pages;
@@ -381,94 +381,6 @@ static long vma_compute_subtree_gap(struct vm_area_struct *vma)
 	return max;
 }
 
-static int browse_rb(struct mm_struct *mm)
-{
-	struct rb_root *root = &mm->mm_rb;
-	int i = 0, j, bug = 0;
-	struct rb_node *nd, *pn = NULL;
-	unsigned long prev = 0, pend = 0;
-
-	for (nd = rb_first(root); nd; nd = rb_next(nd)) {
-		struct vm_area_struct *vma;
-		vma = rb_entry(nd, struct vm_area_struct, vm_rb);
-		if (vma->vm_start < prev) {
-			pr_emerg("vm_start %lx < prev %lx\n",
-				  vma->vm_start, prev);
-			bug = 1;
-		}
-		if (vma->vm_start < pend) {
-			pr_emerg("vm_start %lx < pend %lx\n",
-				  vma->vm_start, pend);
-			bug = 1;
-		}
-		if (vma->vm_start > vma->vm_end) {
-			pr_emerg("vm_start %lx > vm_end %lx\n",
-				  vma->vm_start, vma->vm_end);
-			bug = 1;
-		}
-		spin_lock(&mm->page_table_lock);
-		if (vma->rb_subtree_gap != vma_compute_subtree_gap(vma)) {
-			pr_emerg("free gap %lx, correct %lx\n",
-			       vma->rb_subtree_gap,
-			       vma_compute_subtree_gap(vma));
-			bug = 1;
-		}
-		spin_unlock(&mm->page_table_lock);
-		i++;
-		pn = nd;
-		prev = vma->vm_start;
-		pend = vma->vm_end;
-	}
-	j = 0;
-	for (nd = pn; nd; nd = rb_prev(nd))
-		j++;
-	if (i != j) {
-		pr_emerg("backwards %d, forwards %d\n", j, i);
-		bug = 1;
-	}
-	return bug ? -1 : i;
-}
-
-
-static void validate_mm(struct mm_struct *mm)
-{
-	int bug = 0;
-	int i = 0;
-	unsigned long highest_address = 0;
-	struct vm_area_struct *vma = mm->mmap;
-
-	while (vma) {
-		struct anon_vma *anon_vma = vma->anon_vma;
-		struct anon_vma_chain *avc;
-
-		if (anon_vma) {
-			anon_vma_lock_read(anon_vma);
-			list_for_each_entry(avc, &vma->anon_vma_chain, same_vma)
-				anon_vma_interval_tree_verify(avc);
-			anon_vma_unlock_read(anon_vma);
-		}
-
-		highest_address = vma->vm_end;
-		vma = vma->vm_next;
-		i++;
-	}
-	if (i != mm->map_count) {
-		pr_emerg("map_count %d vm_next %d\n", mm->map_count, i);
-		bug = 1;
-	}
-	if (highest_address != mm->highest_vm_end) {
-		pr_emerg("mm->highest_vm_end %lx, found %lx\n",
-			  mm->highest_vm_end, highest_address);
-		bug = 1;
-	}
-	i = browse_rb(mm);
-	if (i != mm->map_count) {
-		if (i != -1)
-			pr_emerg("map_count %d rb %d\n", mm->map_count, i);
-		bug = 1;
-	}
-	VM_BUG_ON_MM(bug, mm);
-}
 
 static void __vma_link_list(struct mm_struct *mm, struct vm_area_struct *vma,
 		struct vm_area_struct *prev, struct rb_node *rb_parent)
@@ -539,7 +451,7 @@ static void vma_link(struct mm_struct *mm, struct vm_area_struct *vma,
 		i_mmap_unlock_write(mapping);
 
 	mm->map_count++;
-	validate_mm(mm);
+	// validate_mm(mm);
 }
 
 long foreign_populate_vma_page_range(struct task_struct *tsk,
