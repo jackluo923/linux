@@ -1984,7 +1984,6 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	nodemask_t *nmask;
 
   // Added by Xu!!! early return of the page
- 
   if(current != NULL && current->mm != NULL && current->mm->pstore != NULL) {
     unsigned long pheaplo = MIN_PBRK;
     unsigned long pheaphi = pheaplo + current->mm->pstore->cnt * PAGE_SIZE;
@@ -1996,7 +1995,10 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	page = pfn_to_page(pfn);
 	return page;
       }
-      pr_info("PMM: Can not find addr: %p", (void*)addr);
+    }
+    if(addr > pheaplo) {
+      pr_info("PMM: Can not find addr: %p, pheaplo: %lx, pheaphi: %lx",
+	      (void*)addr, pheaplo, pheaphi);
     }
   }
 

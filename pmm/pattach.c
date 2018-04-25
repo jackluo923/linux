@@ -12,7 +12,6 @@
  */
 SYSCALL_DEFINE3(pattach, const __user char *, guid, size_t, len, unsigned long, flag) {
   // Step 1: copy id in
-printk("You are now trying to attach to a pheap.");
   unsigned long ret = 0;
   char pmmid[PMMID_LEN_LIMIT] = {0};
   int i = 0;
@@ -85,7 +84,7 @@ printk("You are now trying to attach to a pheap.");
     /* Load vma into the kernel: get pbrk, then call do_pbrk() */
     // PTE: 9, POFFSET: 12, PMD: 9, HPAGE_PMD_SIZE == 1 << HPAGE_PMD_SHIFT == 1 << 21
     region_len = pdb.stores[check].cnt * PAGE_SIZE;
-    printk("Now attaching an existing ID %s with check value %d, size: %lx", pmmid, check, region_len);
+    printk("Now attaching an existing ID %s with check value %d, size: 0x%lx", pmmid, check, region_len);
     
     if(down_write_killable(&current->mm->mmap_sem)) {
       return -EINTR;
