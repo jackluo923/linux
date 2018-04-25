@@ -5,12 +5,14 @@
 
 struct pmm_owner* pmm_get_owner_from_pid(struct pmm_store* pstore, pid_t pid) {
   struct list_head *node = NULL;
-  struct pmm_owner *owner = NULL;
+  struct pmm_owner *pid_owner = NULL;
+  if(pstore->owner_list == NULL) return NULL;
+  if(pstore->owner_list->pid == pid) return pstore->owner_list;
   
   list_for_each(node, &pstore->owner_list->olist) {
-    owner = list_entry(node, struct pmm_owner, olist);
-    if(owner->pid == pid) {
-      return owner;
+    pid_owner = list_entry(node, struct pmm_owner, olist);
+    if(pid_owner->pid == pid) {
+      return pid_owner;
     }
   }
   return NULL;
