@@ -99,7 +99,11 @@ SYSCALL_DEFINE3(pattach, const __user char *, guid, size_t, len, unsigned long, 
     owner = pmm_get_owner_from_pid(current->mm->pstore, current->pid);
     owner->pbrk_start = MIN_PBRK;
     up_write(&current->mm->mmap_sem);
+    pr_info("Starting to populate the memory address : %p, size: 0x%lx",
+	    (void*)oldpbrk, region_len);
     mm_populate(oldpbrk, region_len);
+    pr_info("Finishes populating the memory address : %p, size: 0x%lx",
+	    (void*)oldpbrk, region_len);
     return ret;
   }
   return ret;

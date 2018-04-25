@@ -1996,10 +1996,8 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
 	return page;
       }
     }
-    if(addr > pheaplo) {
-      pr_info("PMM: Can not find addr: %p, pheaplo: %lx, pheaphi: %lx",
-	      (void*)addr, pheaplo, pheaphi);
-    }
+    pr_info("PMM: Can not find addr: %p, pheaplo: %lx, pheaphi: %lx",
+	    (void*)addr, pheaplo, pheaphi);
   }
 
 retry_cpuset:
