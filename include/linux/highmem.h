@@ -166,11 +166,11 @@ __alloc_zeroed_user_highpage(gfp_t movableflags,
   if(current != NULL && current->mm != NULL && current->mm->pstore != NULL) {
     unsigned long pheaplo = MIN_PBRK;
     unsigned long pheaphi = pheaplo + current->mm->pstore->cnt * PAGE_SIZE;
-    if(addr < pheaphi && addr >= pheaplo) {
-      int index = (addr - pheaplo) / PAGE_SIZE;
+    if(vaddr < pheaphi && vaddr >= pheaplo) {
+      int index = (vaddr - pheaplo) / PAGE_SIZE;
       if(index >=0 && index < current->mm->pstore->cnt) {
 	unsigned long pfn = current->mm->pstore->paddr[index];
-	pr_info("Loading page %p at pfn: %p, index: %d", (void*)addr, (void*)pfn, index);
+	pr_info("Loading page %p at pfn: %p, index: %d", (void*)vaddr, (void*)pfn, index);
 	page = pfn_to_page(pfn);
 	return page;
       }
