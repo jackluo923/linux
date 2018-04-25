@@ -59,6 +59,8 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
     pr_info("Can't find current pid from pstore's owner list!");
     return -EINVAL;
   }
+
+  pr_info("Old pbrk: %p", (void*)mm->pstore->pbrk);
   
   /* Lock mm mmap semaphore */
   if(down_write_killable(&mm->mmap_sem)) {

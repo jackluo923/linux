@@ -61,6 +61,7 @@ printk("You are now trying to attach to a pheap.");
     pdb.store_cnt += 1;
     /* Add current process into the owner list */
     pmm_insert_pid_list(cur_store, current->pid);
+    current->mm->pstore->pbrk = MIN_PBRK;
     current->mm->pstore->owner_list->pbrk_start = MIN_PBRK;
     return ret;
   } else if(flag  == PHEAP_SHARE) {
