@@ -89,7 +89,7 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
     goto out;
   }
   /* Ok, looks good - let it rip. */
-  
+  pr_info("Looks good, calling do_pbrk: %p, %u", (void*)oldpbrk, (newpbrk - oldpbrk));
   if(do_pbrk(current->mm, oldpbrk, newpbrk - oldpbrk, &uf, &target_vma) < 0) {
     goto out; /* do_pbrk fails */
   }
@@ -105,7 +105,7 @@ set_pbrk:
     unsigned long len = PAGE_ALIGN(newpbrk - oldpbrk);
     unsigned long start = oldpbrk;
     unsigned long nr_pages = len/PAGE_SIZE;
-    printk("Now we start to populate the memory region: starting from %p, length %lu, nrpages = %lu.", (void*)oldpbrk, len, nr_pages);
+    pr_info("Now we start to populate the memory region: starting from %p, length %lu, nrpages = %lu.", (void*)oldpbrk, len, nr_pages);
     mm_populate(oldpbrk, newpbrk - oldpbrk);
     // now all physical pages should be filled in
     // find all physical addresses, mimic the behavior in __get_user_pages
@@ -126,7 +126,7 @@ set_pbrk:
             unsigned int page_increm = 1;
             unsigned int page_mask = 0;
             unsigned long page_frame_addr = pmm_get_ptn_addr(target_vma, start, foll_flags, &page_mask);
-            // printk("Now we get the physical address: %p for vaddr %p, kvaddr: %p, nrpages=%ld", (void*)page_frame_addr, (void*) start, (void*)kvirt, nr_pages);
+            pr_info("Now we get the physical address: %p for vaddr %p, kvaddr: %p, nrpages=%ld", (void*)page_frame_addr, (void*) start, (void*)kvirt, nr_pages);
             insert_pstore(mm, page_frame_addr, start);
             if(page_increm > nr_pages) {
                 page_increm = nr_pages;
@@ -138,7 +138,7 @@ set_pbrk:
     }
   }
   // Now: extend all other processes' addrspace attached to this region about the change
-  list_for_each(node, &mm->pstore->owner_list->olist) {
+  /*list_for_each(node, &mm->pstore->owner_list->olist) {
     pid_owner = list_entry(node, struct pmm_owner, olist);
     if(pid_owner->pid != current->pid) { // only extend on non-current processes
       struct task_struct *attached = find_task_by_vpid(pid_owner->pid);
@@ -163,7 +163,7 @@ set_pbrk:
 	}
       }
     }
-  }
+    }*/
   
   // update in the end, because when other processes read this pbrk, they should be able to read the memory
   mm->pstore->pbrk = newpbrk;
@@ -279,42 +279,29 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 {
 	struct mm_struct *mm = current->mm;
 	struct vm_area_struct *vma;
-	int do_align = 0;
-	int aliasing = cache_is_vipt_aliasing();
 	struct vm_unmapped_area_info info;
 
-	if(aliasing) {
-		do_align = filp || (flags & MAP_SHARED);
-	}
+	if(len > TASK_SIZE - mmap_min_addr)
+	  return -ENOMEM;
 
 	if (flags & MAP_FIXED) {
-		if (aliasing && flags & MAP_SHARED &&
-	    		(addr - (pgoff << PAGE_SHIFT)) & (SHMLBA - 1))
-				return -EINVAL;
-		return addr;
-	}
-	if(len > TASK_SIZE) {
-		return -ENOMEM;
+	  return addr;
 	}
 
-	if (addr) {
-		if (do_align)
-			addr = COLOUR_ALIGN(addr, pgoff);
-		else
-			addr = PAGE_ALIGN(addr);
-
-		vma = find_vma(mm, addr);
-		if (TASK_SIZE - len >= addr &&
-		    (!vma || addr + len <= vma->vm_start))
-			return addr;
+	if(addr) {
+	  addr = PAGE_ALIGN(addr);
+	  vma = find_vma(mm, addr);
+	  if(TASK_SIZE - len >= addr && addr >= mmap_min_addr &&
+	     (!vma || addr + len <= vma->vm_start)) {
+	    return addr;
+	  }
 	}
-
+	
 	info.flags = 0;
 	info.length = len;
 	info.low_limit = mm->mmap_base;
 	info.high_limit = TASK_SIZE;
-	info.align_mask = do_align ? (PAGE_MASK&(SHMLBA-1)) : 0;
-	info.align_offset = pgoff << PAGE_SHIFT;
+	info.align_mask = 0;
 	return vm_unmapped_area(&info);
 }
 #endif
@@ -375,12 +362,6 @@ static long vma_compute_subtree_gap(struct vm_area_struct *vma)
 {
 	unsigned long max, subtree_gap;
 
-	/*
-	 * Note: in the rare case of a VM_GROWSDOWN above a VM_GROWSUP, we
-	 * allow two stack_guard_gaps between them here, and when choosing
-	 * an unmapped area; whereas when expanding we only require one.
-	 * That's a little inconsistent, but keeps the code here simpler.
-	 */
 	max = vma->vm_start;
 	if (vma->vm_prev) {
 		max -= vma->vm_prev->vm_end;
@@ -458,13 +439,13 @@ static void validate_mm(struct mm_struct *mm)
 
 	while (vma) {
 		struct anon_vma *anon_vma = vma->anon_vma;
-		/*struct anon_vma_chain *avc;*/
+		struct anon_vma_chain *avc;
 
 		if (anon_vma) {
-			/*anon_vma_lock_read(anon_vma);
+			anon_vma_lock_read(anon_vma);
 			list_for_each_entry(avc, &vma->anon_vma_chain, same_vma)
 				anon_vma_interval_tree_verify(avc);
-			anon_vma_unlock_read(anon_vma);*/
+			anon_vma_unlock_read(anon_vma);
 		}
 
 		highest_address = vma->vm_end;
