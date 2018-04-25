@@ -3522,6 +3522,12 @@ static int handle_pte_fault(struct fault_env *fe)
 	}
 
 	if (!fe->pte) {
+	  // added by Xu
+	  if(current != NULL && current->mm != NULL && current->mm->pstore != NULL &&
+	     fe->address > MIN_PBRK) {
+	    pr_info("Populating address: %p, anony? %d", (void*)fe->address,
+		    vma_is_anonymous(fe->vma));
+	  }
 		if (vma_is_anonymous(fe->vma))
 			return do_anonymous_page(fe);
 		else
