@@ -1992,9 +1992,11 @@ alloc_pages_vma(gfp_t gfp, int order, struct vm_area_struct *vma,
       int index = (addr - pheaplo) / PAGE_SIZE;
       if(index >=0 && index < current->mm->pstore->cnt) {
 	unsigned long pfn = current->mm->pstore->paddr[index];
+	pr_info("Loading page %p at pfn: %p, index: %d", (void*)addr, (void*)pfn, index);
 	page = pfn_to_page(pfn);
 	return page;
       }
+      pr_info("PMM: Can not find addr: %p", (void*)addr);
     }
   }
 

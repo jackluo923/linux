@@ -1249,6 +1249,8 @@ static void __free_pages_ok(struct page *page, unsigned int order)
 	for(index = 0; index < pdb.stores[pdbindex].cnt; index ++) {
 	  unsigned long paddr = pdb.stores[pdbindex].paddr[index];
 	  if(pfn == paddr) {
+	    pr_info("Skip freeing page: %p in free_page_ok, pdbcnt: %d, pstorecnt: %d"
+		    , (void*)pfn, pdb.store_cnt, pdb.stores[pdbindex].cnt);
 	    return;
 	  }
 	}}
@@ -2435,6 +2437,8 @@ void free_hot_cold_page(struct page *page, bool cold)
 	for(index = 0; index < pdb.stores[pdbindex].cnt; index ++) {
 	  unsigned long paddr = pdb.stores[pdbindex].paddr[index];
 	  if(pfn == paddr) {
+	    pr_info("Skip freeing page: %p in free_hc_page, pdbcnt: %d, pstorecnt: %d"
+		    , (void*)pfn, pdb.store_cnt, pdb.stores[pdbindex].cnt);
 	    return;
 	  }
 	}}
