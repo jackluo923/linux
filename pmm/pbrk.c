@@ -43,19 +43,20 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
   pr_info("Now in system call pbrk! caller:%d, pbrk=%p, pstore id: %s.\n", current->pid, (void*)pbrk, mm->pstore->pmmid);
   
   if(mm->pstore == NULL) {
-    // printk("There is no pstore attached! Now returning from pbrk.");
+    pr_info("There is no pstore attached! Now returning from pbrk.");
     return -EINVAL;
   }
   
   owner_pid = pmm_get_head_owner(mm->pstore);
   if(current->pid != owner_pid) {
-    // printk("The process requesting pbrk change %d is not the head owner %d, returning %ld",
-    // 		    current->pid, owner_pid, mm->pstore->pbrk);
+     pr_info("The process requesting pbrk change %d is not the head owner %d, returning %ld",
+     		    current->pid, owner_pid, mm->pstore->pbrk);
     return mm->pstore->pbrk;
   }
 
   current_owner = pmm_get_owner_from_pid(mm->pstore, current->pid);
   if(current_owner == NULL) {
+    pr_info("Can't find current pid from pstore's owner list!");
     return -EINVAL;
   }
   
@@ -86,10 +87,12 @@ SYSCALL_DEFINE1(pbrk, unsigned long, pbrk)
   /* Check against existing mmap mappings. */
   /* If newpbrk + PAGE_SIZE is larger than the safe bound of next vma region, stop increasing pbrk*/
   if(find_vma_intersection(mm, oldpbrk, newpbrk+PAGE_SIZE)) {
+    pr_info("There is an vma intersection. Just return... ");
     goto out;
   }
+  
   /* Ok, looks good - let it rip. */
-  pr_info("Looks good, calling do_pbrk: %p, %lu", (void*)oldpbrk, (newpbrk - oldpbrk));
+  pr_info("Looks good, now calling do_pbrk: %p, %lu", (void*)oldpbrk, (newpbrk - oldpbrk));
   if(do_pbrk(current->mm, oldpbrk, newpbrk - oldpbrk, &uf, &target_vma) < 0) {
     goto out; /* do_pbrk fails */
   }
