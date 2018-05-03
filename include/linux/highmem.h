@@ -7,7 +7,7 @@
 #include <linux/mm.h>
 #include <linux/uaccess.h>
 #include <linux/hardirq.h>
-
+#include <linux/mmzone.h>
 #include <asm/cacheflush.h>
 
 #ifndef ARCH_HAS_FLUSH_ANON_PAGE
@@ -153,6 +153,9 @@ static inline void clear_user_highpage(struct page *page, unsigned long vaddr)
  * __HAVE_ARCH_ALLOC_ZEROED_USER_HIGHPAGE and providing their own
  * implementation.
  */
+#define ALLOC_WMARK_LOW WMARK_LOW
+void pmm_prep_new_page(struct page *page, unsigned int order, 
+			gfp_t gfp_flags, unsigned int alloc_flags);
 static inline struct page *
 __alloc_zeroed_user_highpage(gfp_t movableflags,
 			struct vm_area_struct *vma,
@@ -185,7 +188,7 @@ __alloc_zeroed_user_highpage(gfp_t movableflags,
 	  gfp_t gfp_mask = GFP_HIGHUSER | movableflags;
 	  // order == 0
 	  unsigned alloc_flags = ALLOC_WMARK_LOW;
-	  prep_new_page(page, 0, gfp_mask, alloc_flags);
+	  pmm_prep_new_page(page, 0, gfp_mask, alloc_flags);
 	  clear_user_highpage(page, vaddr);
 	  pr_info("Finished initializing and cleaning the page 0x80000000!");
 	} else {

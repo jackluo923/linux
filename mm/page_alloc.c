@@ -1796,6 +1796,12 @@ static void prep_new_page(struct page *page, unsigned int order, gfp_t gfp_flags
 		clear_page_pfmemalloc(page);
 }
 
+void pmm_prep_new_page(struct page *page, unsigned int order,
+			gfp_t gfp_flags, unsigned int alloc_flags) {
+	prep_new_page(page, order, gfp_flags, alloc_flags);
+}
+
+
 /*
  * Go through the free lists for the given migratetype and remove
  * the smallest available page from the freelists
