@@ -182,7 +182,14 @@ __alloc_zeroed_user_highpage(gfp_t movableflags,
 	pr_info("Now we are allocating the new page: assigning pfn: 0x%lx, page frame addr: %p",
 		pfn, page);
 	if(page) {
+	  gfp_t gfp_mask = GFP_HIGHUSER | movableflags;
+	  // order == 0
+	  unsigned alloc_flags = ALLOC_WMARK_LOW;
+	  prep_new_page(page, 0, gfp_mask, alloc_flags);
 	  clear_user_highpage(page, vaddr);
+	  pr_info("Finished initializing and cleaning the page 0x80000000!");
+	} else {
+	  pr_info("struct page is NULL for addr 0x80000000!!! Need to find the struct page first.");
 	}
 	return page;
       }
